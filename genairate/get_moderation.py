@@ -29,6 +29,7 @@ logger = logging.getLogger(__name__)
     '--moderation-file-path',
     type=click.Path(writable=True),
     help='Path to output directory.',
+    required=True,
 )
 def get_moderation(
     config_file_path: str = None,

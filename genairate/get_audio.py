@@ -21,11 +21,13 @@ logger = logging.getLogger(__name__)
 @click.option(
     '--moderation-file-path',
     type=click.Path(writable=True),
+    required=True,
     help='Path to output directory.',
 )
 @click.option(
     '--audio-output-path',
     type=click.Path(writable=True),
+    required=True,
     help='Path to output directory.',
 )
 @click.option(
@@ -33,6 +35,7 @@ logger = logging.getLogger(__name__)
     is_flag=True,
     show_default=True,
     default=True,
+    required=False,
     help='Process all audio files into one.',
 )
 def get_audio(
