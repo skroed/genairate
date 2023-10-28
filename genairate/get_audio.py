@@ -69,8 +69,9 @@ def get_audio(
     moderation_model = get_audio_model(config['moderation'])
     song_model = get_audio_model(config['song'])
 
-    config_list = list(Path(moderation_file_path).rglob('*.yaml'))
-    random.shuffle(config_list)
+    config_list = reversed(
+        sorted(list(Path(moderation_file_path).rglob('*.yaml'))),
+    )
 
     full_audio = []
     logger.info(f"Getting audio for {config['n_examples']} examples.")
@@ -86,14 +87,10 @@ def get_audio(
         )
         next_title = example_config['title_next'].lower().replace(' ', '_')
 
-        logger.info(f'Getting audio for {previous_title} and {next_title}')
+        logger.info(f'Getting audio for {previous_title}')
         song_previous = song_model.get(example_config['description_previous'])
-        song_next = song_model.get(example_config['description_next'])
-
         song_previous_file = audio_output_path / f'{previous_title}.mp3'
-        song_next_file = audio_output_path / f'{next_title}.mp3'
         song_previous.export(song_previous_file, format='mp3')
-        song_next.export(song_next_file, format='mp3')
 
         logger.info('Getting audio for moderation')
         moderation = moderation_model.get(example_config['moderation'])
@@ -102,7 +99,7 @@ def get_audio(
         moderation.export(output_path, format='mp3')
         logger.info(f'Saved audio to {output_path}')
 
-        full_audio.append((song_previous, moderation, song_next))
+        full_audio.append((song_previous, moderation))
 
     logger.info('Done processing all examples.')
     if merge_audio:

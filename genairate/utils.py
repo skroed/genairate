@@ -28,17 +28,16 @@ def merge_audio_files(full_audio: list[tuple], output_path: Path) -> None:
 
     Args:
         full_audio (list[tuple]): A list of tuples containing the audio files.
-            every tuple has the format (previous_song, moderation, next_song).
+            every tuple has the format (previous_song, moderation).
         output_path (Path): where to save the final audio file.
     """
-    for idx, (prev_song, mod, next_song) in enumerate(full_audio):
+    for idx, (prev_song, mod) in enumerate(full_audio):
         prev_song = prev_song.fade_in(1000).fade_out(1000)
-        next_song = next_song.fade_in(1000).fade_out(1000)
         if idx == 0:
-            full_audio = prev_song + mod + next_song
+            full_audio = prev_song + mod
 
         else:
-            full_audio += prev_song + mod + next_song
+            full_audio += prev_song + mod
 
     logger.info(
         f'Total duration of audio: {full_audio.duration_seconds} seconds.',

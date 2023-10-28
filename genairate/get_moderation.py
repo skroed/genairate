@@ -57,8 +57,8 @@ def get_moderation(
     logger.info(f'Found {len(song_files)} song files.')
     logger.info(f"Getting {config['n_examples']} moderations.")
 
-    for _ in range(config['n_examples']):
-        previous = load_config(song_files.pop())
+    previous = load_config(song_files.pop())
+    for idx_ex in range(config['n_examples']):
         next = load_config(song_files.pop())
         language_model = get_language_model(config)
         try:
@@ -71,7 +71,7 @@ def get_moderation(
 
             with open(
                 Path(moderation_file_path)
-                / f"{previous['song_title'].lower().replace(' ', '_')}_to_{next['song_title'].lower().replace(' ', '_')}.yaml",
+                / f"idx_{idx_ex}_{previous['song_title'].lower().replace(' ', '_')}_to_{next['song_title'].lower().replace(' ', '_')}.yaml",
                 'w',
             ) as f:
                 yaml.dump(
@@ -89,6 +89,8 @@ def get_moderation(
             logger.info(
                 f"Got moderation for {previous['song_title']} to {next['song_title']}",
             )
+            # Set the next song as the previous song
+            previous = next
         except Exception as e:
             logger.error(e)
             continue

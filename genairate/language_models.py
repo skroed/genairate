@@ -22,6 +22,8 @@ class LanguageModel(object):
         if prompt_type == 'songs':
             self.role = f"""You are an expert music producer with a creative mind, trained in describing songs in appropriate detail and in a consistent way.
             You will be provided a base description of song and you should create a new description of another song in a similar style.
+            Make sure that the genre (rock, pop, electronic, ...) of the song is the same as the previous song but the content, the artist names and the song titles
+            can be different.
             The description should be 1 sentence long. Also come up with an creative artist name and a song title.
             The output should have the following format:
             <song title>|||<artist name>|||<description>
@@ -93,7 +95,8 @@ class LlamaLanguageModel(LanguageModel):
                     Description: {prompt}
                 """
         output_prompt = self.inference_client.text_generation(
-            input_prompt, max_new_tokens=2000,
+            input_prompt,
+            max_new_tokens=2000,
         ).split('***')
 
         return output_prompt
@@ -104,6 +107,7 @@ class OpenAiLanguageModel(LanguageModel):
         self,
         model_name: str,
         prompt_type: str = None,
+        temperature: float = 1.0,
     ):
         """
         Language model from OpenAI.
@@ -122,6 +126,7 @@ class OpenAiLanguageModel(LanguageModel):
             api_key=os.environ['OPENAI_API_KEY'],
         )
         self.model_name = model_name
+        self.temperature = temperature
 
     def get(self, prompt: str) -> str:
         prompt = prompt.replace('\n', '')
@@ -133,6 +138,7 @@ class OpenAiLanguageModel(LanguageModel):
         completion = self.inference_client.chat.completions.create(
             model=self.model_name,
             messages=messages,
+            temperature=self.temperature,
         )
         output_prompt = completion.choices[0].message.content.split('|||')
 
@@ -159,6 +165,7 @@ def get_language_model(config: dict) -> LanguageModel:
         language_model = OpenAiLanguageModel(
             model_name=config['model'],
             prompt_type=config['prompt_type'],
+            temperature=config['temperature'],
         )
     else:
         raise ValueError(f"Language model {config['name']} not supported.")

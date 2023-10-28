@@ -1,5 +1,6 @@
 name: OpenAi
 model: gpt-4
+temperature: 1.5
 n_examples: 20
 prompt_type: songs
 prompt: a dark and rough electronic track with strong bass

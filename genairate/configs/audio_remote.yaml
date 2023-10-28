@@ -6,6 +6,6 @@ moderation:
   local: true
 song:
   name: audiocraft
+  audio_type: music
   model_name_or_path: facebook/musicgen-small
   local: false
-  audio_type: music

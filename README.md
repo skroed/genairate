@@ -25,6 +25,7 @@ genairate get-audio --config-file-path configs/audio_remote.yaml --moderation-fi
 ```
 ### configuration
 Unless you have a super powerful machine it is recommended to use remote configurations for LLMs and generative audio.
+The following repositories can be used for [Bark](https://huggingface.co/skroed/bark) and [musicgen-medium](https://huggingface.co/skroed/musicgen-medium) to create inference endpoints.
 ### examples songs
 `song_title`: Dance with Joy
 `artist`:  Bubblegum Beats

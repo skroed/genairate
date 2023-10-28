@@ -4,6 +4,7 @@ from functools import reduce
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
+import numpy as np
 import scipy
 import torch
 from audiocraft.models import MusicGen
@@ -108,20 +109,10 @@ class BarkAudioModel(AudioModel):
 
         else:
             self.model = InferenceClient(model=model_name_or_path)
-            blank_inp = AutoProcessor.from_pretrained(model_name_or_path)(
-                'blank',
-                voice_preset=self.speaker,
-            )
-            # Convert tensors to lists to pass through API
-            history_prompt = blank_inp['history_prompt']
-            new_history_prompt = {}
-            for key, value in history_prompt.items():
-                value = value.cpu().numpy().tolist()
-                new_history_prompt[key] = value
-
-            self.forward_params = {
-                'history_prompt': new_history_prompt,
-            }
+            if '.huggingface.cloud' in model_name_or_path:
+                self.custom_endpoint = True
+            else:
+                self.custom_endpoint = False
 
     def get(self, prompt: str) -> AudioSegment:
         """
@@ -159,16 +150,38 @@ class BarkAudioModel(AudioModel):
                     channels=1,
                 )
             else:
-                audio_raw = self.model.post(
-                    json={
-                        'inputs': sentence,
-                        'forward_params': self.forward_params,
-                    },
+                logger.info(
+                    f'Generating audio for sentence: {sentence} using remote.',
                 )
-                with TemporaryDirectory() as temp_dir:
-                    file_path = Path(temp_dir) / Path('tmp_audio.flac')
-                    file_path.write_bytes(audio_raw)
-                    audio = AudioSegment.from_file(file_path, 'flac')
+                if self.custom_endpoint:
+                    audio_raw = self.model.post(
+                        json={
+                            'inputs': sentence,
+                            'voice_preset': self.speaker,
+                        },
+                    )
+                    audio = np.array(
+                        eval(audio_raw)[0]['generated_audio'][0],
+                    ).squeeze()
+                    audio = AudioSegment(
+                        audio.tobytes(),
+                        frame_rate=self.model.sample_rate,
+                        sample_width=audio.dtype.itemsize,
+                        channels=1,
+                    )
+                else:
+                    logger.warning(
+                        'speaker is not being used in remote setting. Use custom endpoint for this.',
+                    )
+                    audio_raw = self.model.post(
+                        json={
+                            'inputs': sentence,
+                        },
+                    )
+                    with TemporaryDirectory() as temp_dir:
+                        file_path = Path(temp_dir) / Path('tmp_audio.flac')
+                        file_path.write_bytes(audio_raw)
+                        audio = AudioSegment.from_file(file_path, 'flac')
             audio_arrays.append(audio)
 
         return reduce(lambda x, y: x + y, audio_arrays)
@@ -216,6 +229,8 @@ class AudiocraftAudioModel(AudioModel):
         else:
             # Duration is 30s by default
             self.model = InferenceClient(model=model_name_or_path)
+            if '.huggingface.cloud' in model_name_or_path:
+                self.custom_endpoint = True
 
     def get(self, prompt: str) -> AudioSegment:
         """
@@ -237,14 +252,31 @@ class AudiocraftAudioModel(AudioModel):
             )
             return audio
         else:
-            audio_raw = self.model.text_to_speech(
-                prompt,
-                **self.inference_params,
-            )
-            with TemporaryDirectory() as temp_dir:
-                file_path = Path(temp_dir) / Path('tmp_audio.flac')
-                file_path.write_bytes(audio_raw)
-                audio = AudioSegment.from_file(file_path, 'flac')
+            if self.custom_endpoint:
+                audio_raw = self.model.post(
+                    json={
+                        'inputs': prompt,
+                    },
+                )
+                audio = np.array(
+                    eval(audio_raw)[0]['generated_audio'][0],
+                ).squeeze()
+                audio = AudioSegment(
+                    audio.tobytes(),
+                    frame_rate=self.model.sample_rate,
+                    sample_width=audio.dtype.itemsize,
+                    channels=1,
+                )
+
+            else:
+                audio_raw = self.model.text_to_speech(
+                    prompt,
+                    **self.inference_params,
+                )
+                with TemporaryDirectory() as temp_dir:
+                    file_path = Path(temp_dir) / Path('tmp_audio.flac')
+                    file_path.write_bytes(audio_raw)
+                    audio = AudioSegment.from_file(file_path, 'flac')
             return audio
 
 

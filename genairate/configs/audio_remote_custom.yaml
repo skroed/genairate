@@ -1,0 +1,11 @@
+n_examples: 3
+moderation:
+  name: bark
+  audio_type: tts
+  model_name_or_path: <inference_endpoint>
+  local: false
+song:
+  name: audiocraft
+  audio_type: music
+  model_name_or_path: <inference_endpoint>
+  local: false
