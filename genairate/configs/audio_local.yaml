@@ -1,0 +1,12 @@
+n_examples: 3
+moderation:
+  name: bark
+  audio_type: tts
+  model_name_or_path: suno/bark-small
+  local: true
+song:
+  name: audiocraft
+  model_name_or_path: small
+  duration: 20
+  audio_type: music
+  local: true

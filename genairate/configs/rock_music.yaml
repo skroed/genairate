@@ -1,0 +1,5 @@
+name: OpenAi
+model: gpt-4
+n_examples: 20
+prompt_type: songs
+prompt: epic rock anthem with guitar and drums

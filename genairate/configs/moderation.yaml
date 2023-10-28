@@ -1,0 +1,4 @@
+name: OpenAi
+model: gpt-4
+n_examples: 10
+prompt_type: moderation
