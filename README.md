@@ -1,5 +1,7 @@
 # genairate
 A repository to create the content for a generative AI based radio station.
+![genairate](https://github.com/skroed/genairate/assets/83976953/9e3e07bd-2e2b-4337-bb0f-4955a20302a3)
+
 ## how to install
 You can install the repository via checkout and then
 ```shell
