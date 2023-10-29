@@ -158,7 +158,7 @@ class BarkAudioModel(AudioModel):
                 if self.custom_endpoint:
                     audio_raw = self.model.post(
                         json={
-                            'inputs': '[moderator] ' + sentence,
+                            'inputs': sentence,
                             'voice_preset': self.speaker,
                         },
                     )
@@ -170,7 +170,9 @@ class BarkAudioModel(AudioModel):
                         .astype(np.float32)
                     )
                     audio = librosa.resample(
-                        audio, orig_sr=24000, target_sr=GLOBAL_SAMPLE_RATE,
+                        audio,
+                        orig_sr=24000,
+                        target_sr=GLOBAL_SAMPLE_RATE,
                     )
                     with TemporaryDirectory() as temp_dir:
                         file_path = Path(temp_dir) / Path('tmp_audio.wav')
@@ -283,7 +285,9 @@ class AudiocraftAudioModel(AudioModel):
                     .astype(np.float32)
                 )
                 audio = librosa.resample(
-                    audio, orig_sr=32000, target_sr=GLOBAL_SAMPLE_RATE,
+                    audio,
+                    orig_sr=32000,
+                    target_sr=GLOBAL_SAMPLE_RATE,
                 )
                 with TemporaryDirectory() as temp_dir:
                     file_path = Path(temp_dir) / Path('tmp_audio.wav')

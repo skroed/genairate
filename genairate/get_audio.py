@@ -75,7 +75,7 @@ def get_audio(
     config_list = sorted(list(Path(moderation_file_path).rglob('*.yaml')))
     full_audio = []
     logger.info(f"Getting audio for {config['n_examples']} examples.")
-    for example_config_path in config_list:
+    for example_config_path in config_list[: config['n_examples']]:
         example_config = load_config(example_config_path)
         previous_title = (
             example_config['title_previous']
