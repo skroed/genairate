@@ -3,7 +3,7 @@ A repository to create the content for a generative AI based radio station.
 <!-- ![genairate](https://github.com/skroed/genairate/assets/83976953/9e3e07bd-2e2b-4337-bb0f-4955a20302a3 | width=100) -->
 <img src="https://github.com/skroed/genairate/assets/83976953/9e3e07bd-2e2b-4337-bb0f-4955a20302a3" width="600">
 
-## Change Log
+## change Log
 - 2023-10-29: Initial working version with added audio examples
 
 ## TODO
@@ -54,24 +54,30 @@ Example of a moderation between two songs: \
   beautiful track. Relax your mind to the soothing melodies of "Dance of the Misty
   Moon" by Arabella Steinway. Enjoy!
 ### example audio
-here is one example song: \
+#### example song 1
 `artist`: DJ Starfire \
 `description`: An uplifting EDM track with a pulsing rhythm and memorable melody. \
-`song_title`: Sunset Melody \
-[song1](https://github.com/skroed/genairate/assets/83976953/e2b62842-6ff1-429c-8128-23bc10bac112)
+`song_title`: Sunset Melody
 
-and here is another one: \
+<audio src="https://github.com/skroed/genairate/blob/main/examples/sunset_melody.mp3?raw=true" controls="controls">
+</audio>
+
+#### example song 2
 `artist`: Cordelia Royal \
 `description`: An enchanting piece of classical music, played on a grand piano, unveiling
   a tranquil mood, gentle progression, and invoking contemplative tranquility. \
-`song_title`: Spiritual Reverie \
-[song2](https://github.com/skroed/genairate/assets/83976953/b037d310-fd33-4e42-930c-c01a26767a7f)
+`song_title`: Spiritual Reverie
 
-this is an example moderation: \
-Song: Sunshine morning to Song: Bass enigma \
-[moderation](https://github.com/skroed/genairate/assets/83976953/2437bba0-5cb5-4524-bd80-8a2c239bb634)
+<audio src="https://github.com/skroed/genairate/blob/main/examples/spiritual_reverie.mp3?raw=true" controls="controls">
+</audio>
 
+#### example moderation
+Song: Sunshine morning to Song: Bass enigma
 
+<audio src="https://github.com/skroed/genairate/blob/main/examples/sunshine_morning_to_bass_enigma.mp3?raw=true" controls="controls">
+</audio>
+
+#### more examples
 Feel free to browse through all the [examples](examples) provided with the repository.
 The folder contains both songs and moderations between the songs. The full audio of ~15 minutes of genairate radio is located
 in [examples/merged_audio.mp3](examples/merged_audio.mp3).
