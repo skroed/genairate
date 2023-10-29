@@ -44,3 +44,28 @@ def merge_audio_files(full_audio: list[tuple], output_path: Path) -> None:
     )
     logger.info(f'Saving audio to {output_path}.')
     full_audio.export(output_path / 'merged_audio.mp3', format='mp3')
+
+
+def create_sentence_chunks(sentences: list[str]) -> list[str]:
+    """
+    Merge sentences together such that are not longer sections than 30 words.
+
+    Args:
+        sentences (list[str]): A list of sentences.
+
+    Returns:
+        list[str]: A list of sentences merged together.
+    """
+    sentence_chunks = []
+    sentence_chunk = ''
+    for sentence in sentences:
+        lenght_sentence = len(sentence.split(' '))
+        if len(sentence_chunk.split(' ')) + lenght_sentence < 30:
+            sentence_chunk += sentence + ' '
+        else:
+            sentence_chunks.append(sentence_chunk)
+            sentence_chunk = sentence + ' '
+
+    sentence_chunks.append(sentence_chunk)
+
+    return sentence_chunks

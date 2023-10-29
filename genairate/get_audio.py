@@ -72,14 +72,11 @@ def get_audio(
     moderation_model = get_audio_model(config['moderation'])
     song_model = get_audio_model(config['song'])
 
-    config_list = reversed(
-        sorted(list(Path(moderation_file_path).rglob('*.yaml'))),
-    )
-
+    config_list = sorted(list(Path(moderation_file_path).rglob('*.yaml')))
     full_audio = []
     logger.info(f"Getting audio for {config['n_examples']} examples.")
-    for _ in range(config['n_examples']):
-        example_config = load_config(config_list.pop())
+    for example_config_path in config_list:
+        example_config = load_config(example_config_path)
         previous_title = (
             example_config['title_previous']
             .lower()

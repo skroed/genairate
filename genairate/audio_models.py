@@ -4,6 +4,7 @@ from functools import reduce
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
+import librosa
 import numpy as np
 import scipy
 import torch
@@ -13,7 +14,11 @@ from nltk import sent_tokenize
 from pydub import AudioSegment
 from transformers import AutoModel, AutoProcessor, AutoTokenizer, VitsModel
 
+from genairate.utils import create_sentence_chunks
+
 logger = logging.getLogger(__name__)
+
+GLOBAL_SAMPLE_RATE = 22050
 
 
 class AudioModel(object):
@@ -91,11 +96,6 @@ class BarkAudioModel(AudioModel):
             raise NotImplementedError(
                 'BarkAudioModel only supports TTS at the moment.',
             )
-        if 'bark' not in model_name_or_path.lower():
-            raise ValueError(
-                f'Model {model_name_or_path} not supported.'
-                ' Currently only Bark is supported.',
-            )
         # Select a random speaker
         speakers = [f'v2/en_speaker_{speaker}' for speaker in range(10)]
         random.shuffle(speakers)
@@ -111,6 +111,9 @@ class BarkAudioModel(AudioModel):
             self.model = InferenceClient(model=model_name_or_path)
             if '.huggingface.cloud' in model_name_or_path:
                 self.custom_endpoint = True
+                logger.info(
+                    f'Using custom endpoint {model_name_or_path} for bark',
+                )
             else:
                 self.custom_endpoint = False
 
@@ -125,6 +128,7 @@ class BarkAudioModel(AudioModel):
             AudioSegment: The audio generated from the prompt.
         """
         sentences = sent_tokenize(prompt)
+        sentences = create_sentence_chunks(sentences)
 
         audio_arrays = []
         for sentence in sentences:
@@ -145,30 +149,38 @@ class BarkAudioModel(AudioModel):
                 )
                 audio = AudioSegment(
                     audio.tobytes(),
-                    frame_rate=self.model.sample_rate,
+                    frame_rate=24000,
                     sample_width=audio.dtype.itemsize,
                     channels=1,
                 )
+
             else:
-                logger.info(
-                    f'Generating audio for sentence: {sentence} using remote.',
-                )
                 if self.custom_endpoint:
                     audio_raw = self.model.post(
                         json={
-                            'inputs': sentence,
+                            'inputs': '[moderator] ' + sentence,
                             'voice_preset': self.speaker,
                         },
                     )
-                    audio = np.array(
-                        eval(audio_raw)[0]['generated_audio'][0],
-                    ).squeeze()
-                    audio = AudioSegment(
-                        audio.tobytes(),
-                        frame_rate=self.model.sample_rate,
-                        sample_width=audio.dtype.itemsize,
-                        channels=1,
+                    audio = (
+                        np.array(
+                            eval(audio_raw)[0]['generated_audio'][0],
+                        )
+                        .squeeze()
+                        .astype(np.float32)
                     )
+                    audio = librosa.resample(
+                        audio, orig_sr=24000, target_sr=GLOBAL_SAMPLE_RATE,
+                    )
+                    with TemporaryDirectory() as temp_dir:
+                        file_path = Path(temp_dir) / Path('tmp_audio.wav')
+                        scipy.io.wavfile.write(
+                            file_path,
+                            GLOBAL_SAMPLE_RATE,
+                            audio,
+                        )
+
+                        audio = AudioSegment.from_file(file_path)
                 else:
                     logger.warning(
                         'speaker is not being used in remote setting. Use custom endpoint for this.',
@@ -230,7 +242,12 @@ class AudiocraftAudioModel(AudioModel):
             # Duration is 30s by default
             self.model = InferenceClient(model=model_name_or_path)
             if '.huggingface.cloud' in model_name_or_path:
+                logger.info(
+                    f'Using custom endpoint {model_name_or_path} for musicgen',
+                )
                 self.custom_endpoint = True
+            else:
+                self.custom_endpoint = False
 
     def get(self, prompt: str) -> AudioSegment:
         """
@@ -258,15 +275,24 @@ class AudiocraftAudioModel(AudioModel):
                         'inputs': prompt,
                     },
                 )
-                audio = np.array(
-                    eval(audio_raw)[0]['generated_audio'][0],
-                ).squeeze()
-                audio = AudioSegment(
-                    audio.tobytes(),
-                    frame_rate=self.model.sample_rate,
-                    sample_width=audio.dtype.itemsize,
-                    channels=1,
+                audio = (
+                    np.array(
+                        eval(audio_raw)[0]['generated_audio'][0],
+                    )
+                    .squeeze()
+                    .astype(np.float32)
                 )
+                audio = librosa.resample(
+                    audio, orig_sr=32000, target_sr=GLOBAL_SAMPLE_RATE,
+                )
+                with TemporaryDirectory() as temp_dir:
+                    file_path = Path(temp_dir) / Path('tmp_audio.wav')
+                    scipy.io.wavfile.write(
+                        file_path,
+                        GLOBAL_SAMPLE_RATE,
+                        audio,
+                    )
+                    audio = AudioSegment.from_file(file_path)
 
             else:
                 audio_raw = self.model.text_to_speech(
