@@ -1,6 +1,15 @@
-# genairate
+# genairate 🔉
 A repository to create the content for a generative AI based radio station.
-![genairate](https://github.com/skroed/genairate/assets/83976953/9e3e07bd-2e2b-4337-bb0f-4955a20302a3)
+<!-- ![genairate](https://github.com/skroed/genairate/assets/83976953/9e3e07bd-2e2b-4337-bb0f-4955a20302a3 | width=100) -->
+<img src="https://github.com/skroed/genairate/assets/83976953/9e3e07bd-2e2b-4337-bb0f-4955a20302a3" width="600">
+
+## Change Log
+- 2023-10-29: Initial working version with added audio examples
+
+## TODO
+- [ ] support better speech synthesis
+- [ ] make moderation and song roles configurable
+- [ ] unify audio conversion in model
 
 ## how to install
 You can install the repository via checkout and then
@@ -26,15 +35,15 @@ genairate get-moderation --config-file-path configs/moderation.yaml --song-file-
 genairate get-audio --config-file-path configs/audio_remote.yaml --moderation-file-path my/moderation/path --audio-output-path audio/out/path
 ```
 ### configuration
-Unless you have a super powerful machine it is recommended to use remote configurations for LLMs and generative audio.
+Unless you have a super powerful machine it is recommended to use remote configurations for LLMs and generative audio. For LLMs the best performance is reached with OpenAI.
 The following repositories can be used for [Bark](https://huggingface.co/skroed/bark) and [musicgen-medium](https://huggingface.co/skroed/musicgen-medium) to create inference endpoints.
-### examples songs
-`song_title`: Dance with Joy
-`artist`:  Bubblegum Beats
+### examples songs description
+`song_title`: Dance with Joy \
+`artist`:  Bubblegum Beats \
 `description`: This is a lively pop song with an infectious chorus, upbeat rhythm, and
   is written in a major key.
-### examples moderation
-Example of a moderation between two songs:
+### examples moderation script
+Example of a moderation between two songs: \
 `moderation`: Well, folks, isn't "Dance with Joy" by Bubblegum Beats just the best song
   to lighten up your mood and get your feet tapping? Speaking of dancing feet, let
   me share some fantastic news from the world of sports. Rumor has it, an underground
@@ -44,4 +53,7 @@ Example of a moderation between two songs:
   time to slow things down a bit, as we pivot from our Dance with Joy to our next
   beautiful track. Relax your mind to the soothing melodies of "Dance of the Misty
   Moon" by Arabella Steinway. Enjoy!
-## example audio
+### example audio
+Feel free to browse through the [examples](examples) provided with the repository.
+The folder contains both songs and moderations between the songs. The full audio can be found
+in [examples/merged_audio.mp3](examples/merged_audio.mp3).
