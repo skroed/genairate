@@ -3,6 +3,7 @@ import random
 from functools import reduce
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from typing import Union
 
 import librosa
 import numpy as np
@@ -43,11 +44,62 @@ class AudioModel(object):
         """
         self.name = name
         self.local = local
+        self.sample_rate = None
 
         if not inference_params:
             inference_params = {}
 
         self.inference_params = inference_params
+
+    def raw_to_segment(
+        self, data: Union[np.array, bytes, torch.tensor],
+    ) -> AudioSegment:
+        """
+        Converts raw audio to an AudioSegment.
+
+        Args:
+            data (Union[np.array, bytes, torch.tensor]): The raw audio.
+
+        Returns:
+            AudioSegment: The audio as an AudioSegment.
+        """
+        if torch.is_tensor(data):
+            data = data.cpu().numpy().squeeze().astype(np.float32)
+        elif isinstance(data, bytes):
+            if data[:4].decode('utf8') == 'fLaC':
+                with TemporaryDirectory() as temp_dir:
+                    file_path = Path(temp_dir) / Path('tmp_audio.flac')
+                    file_path.write_bytes(data)
+                    data = AudioSegment.from_file(file_path, 'flac')
+                    data = data.set_frame_rate(GLOBAL_SAMPLE_RATE)
+                return data
+            else:
+                data = (
+                    np.array(
+                        eval(data)[0]['generated_audio'][0],
+                    )
+                    .squeeze()
+                    .astype(np.float32)
+                )
+        elif isinstance(data, np.ndarray):
+            pass
+        else:
+            raise ValueError(
+                f'Data type {type(data)} not supported for raw_to_segment.',
+            )
+
+        if self.sample_rate != GLOBAL_SAMPLE_RATE:
+            data = librosa.resample(
+                data,
+                orig_sr=self.sample_rate,
+                target_sr=GLOBAL_SAMPLE_RATE,
+            )
+        return AudioSegment(
+            data.tobytes(),
+            frame_rate=GLOBAL_SAMPLE_RATE,
+            sample_width=data.dtype.itemsize,
+            channels=1,
+        )
 
     def get(self, prompt: str) -> AudioSegment:
         """
@@ -92,6 +144,8 @@ class BarkAudioModel(AudioModel):
             inference_params=inference_params,
         )
 
+        self.sample_rate = 24000
+
         if audio_type.lower() != 'tts':
             raise NotImplementedError(
                 'BarkAudioModel only supports TTS at the moment.',
@@ -134,25 +188,16 @@ class BarkAudioModel(AudioModel):
         for sentence in sentences:
             logger.info(f'Generating audio for sentence: {sentence}')
             if self.local:
-                audio = (
-                    self.model.generate(
-                        **self.processor(
-                            text=[sentence],
-                            return_tensors='pt',
-                            voice_preset=self.speaker,
-                        ),
-                        do_sample=False,
-                    )
-                    .cpu()
-                    .numpy()
-                    .squeeze()
+                audio_raw = self.model.generate(
+                    **self.processor(
+                        text=[sentence],
+                        return_tensors='pt',
+                        voice_preset=self.speaker,
+                    ),
+                    do_sample=False,
                 )
-                audio = AudioSegment(
-                    audio.tobytes(),
-                    frame_rate=24000,
-                    sample_width=audio.dtype.itemsize,
-                    channels=1,
-                )
+
+                audio = self.raw_to_segment(audio_raw)
 
             else:
                 if self.custom_endpoint:
@@ -162,27 +207,7 @@ class BarkAudioModel(AudioModel):
                             'voice_preset': self.speaker,
                         },
                     )
-                    audio = (
-                        np.array(
-                            eval(audio_raw)[0]['generated_audio'][0],
-                        )
-                        .squeeze()
-                        .astype(np.float32)
-                    )
-                    audio = librosa.resample(
-                        audio,
-                        orig_sr=24000,
-                        target_sr=GLOBAL_SAMPLE_RATE,
-                    )
-                    with TemporaryDirectory() as temp_dir:
-                        file_path = Path(temp_dir) / Path('tmp_audio.wav')
-                        scipy.io.wavfile.write(
-                            file_path,
-                            GLOBAL_SAMPLE_RATE,
-                            audio,
-                        )
-
-                        audio = AudioSegment.from_file(file_path)
+                    audio = self.raw_to_segment(audio_raw)
                 else:
                     logger.warning(
                         'speaker is not being used in remote setting. Use custom endpoint for this.',
@@ -192,10 +217,8 @@ class BarkAudioModel(AudioModel):
                             'inputs': sentence,
                         },
                     )
-                    with TemporaryDirectory() as temp_dir:
-                        file_path = Path(temp_dir) / Path('tmp_audio.flac')
-                        file_path.write_bytes(audio_raw)
-                        audio = AudioSegment.from_file(file_path, 'flac')
+                    audio = self.raw_to_segment(audio_raw)
+
             audio_arrays.append(audio)
 
         return reduce(lambda x, y: x + y, audio_arrays)
@@ -232,6 +255,8 @@ class AudiocraftAudioModel(AudioModel):
             inference_params=inference_params,
         )
 
+        self.sample_rate = 32000
+
         if audio_type.lower() != 'music':
             raise NotImplementedError(
                 'AudiocraftAudioModel only supports music at the moment.',
@@ -262,13 +287,8 @@ class AudiocraftAudioModel(AudioModel):
             AudioSegment: The audio generated from the prompt.
         """
         if self.local:
-            audio = self.model.generate(prompt).cpu().numpy()
-            audio = AudioSegment(
-                audio.tobytes(),
-                frame_rate=self.model.sample_rate,
-                sample_width=audio.dtype.itemsize,
-                channels=1,
-            )
+            audio_raw = self.model.generate(prompt)
+            audio = self.raw_to_segment(audio_raw)
             return audio
         else:
             if self.custom_endpoint:
@@ -277,36 +297,14 @@ class AudiocraftAudioModel(AudioModel):
                         'inputs': prompt,
                     },
                 )
-                audio = (
-                    np.array(
-                        eval(audio_raw)[0]['generated_audio'][0],
-                    )
-                    .squeeze()
-                    .astype(np.float32)
-                )
-                audio = librosa.resample(
-                    audio,
-                    orig_sr=32000,
-                    target_sr=GLOBAL_SAMPLE_RATE,
-                )
-                with TemporaryDirectory() as temp_dir:
-                    file_path = Path(temp_dir) / Path('tmp_audio.wav')
-                    scipy.io.wavfile.write(
-                        file_path,
-                        GLOBAL_SAMPLE_RATE,
-                        audio,
-                    )
-                    audio = AudioSegment.from_file(file_path)
+                audio = self.raw_to_segment(audio_raw)
 
             else:
                 audio_raw = self.model.text_to_speech(
                     prompt,
                     **self.inference_params,
                 )
-                with TemporaryDirectory() as temp_dir:
-                    file_path = Path(temp_dir) / Path('tmp_audio.flac')
-                    file_path.write_bytes(audio_raw)
-                    audio = AudioSegment.from_file(file_path, 'flac')
+                audio = self.raw_to_segment(audio_raw)
             return audio
 
 
@@ -369,23 +367,10 @@ class VitsAudioModel(AudioModel):
             if self.local:
                 inputs = self.tokenizer(sentence, return_tensors='pt')
                 with torch.no_grad():
-                    audio = (
-                        self.model(
-                            **inputs,
-                        )
-                        .waveform.cpu()
-                        .numpy()
-                        .squeeze()
-                    )
-                # NOTE: Fix write to file with scipy, did not work with pydub
-                with TemporaryDirectory() as temp_dir:
-                    file_path = Path(temp_dir) / Path('tmp_audio.wav')
-                    scipy.io.wavfile.write(
-                        file_path,
-                        self.model.config.sampling_rate,
-                        audio,
-                    )
-                    audio = AudioSegment.from_file(file_path, 'wav')
+                    audio_raw = self.model(
+                        **inputs,
+                    ).waveform
+                audio = self.raw_to_segment(audio_raw)
 
             else:
                 audio_raw = self.model.post(
@@ -393,10 +378,7 @@ class VitsAudioModel(AudioModel):
                         'inputs': sentence,
                     },
                 )
-                with TemporaryDirectory() as temp_dir:
-                    file_path = Path(temp_dir) / Path('tmp_audio.flac')
-                    file_path.write_bytes(audio_raw)
-                    audio = AudioSegment.from_file(file_path, 'flac')
+                audio = self.raw_to_segment(audio_raw)
             audio_arrays.append(audio)
 
         return reduce(lambda x, y: x + y, audio_arrays)
