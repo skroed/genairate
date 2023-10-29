@@ -3,6 +3,12 @@ A repository to create the content for a generative AI based radio station.
 <!-- ![genairate](https://github.com/skroed/genairate/assets/83976953/9e3e07bd-2e2b-4337-bb0f-4955a20302a3 | width=100) -->
 <img src="https://github.com/skroed/genairate/assets/83976953/9e3e07bd-2e2b-4337-bb0f-4955a20302a3" width="600">
 
+## Tune in
+
+
+https://github.com/skroed/genairate/assets/83976953/6336bc7f-e57c-4467-a305-b6cd1b1d6d23
+
+
 ## change Log
 - 2023-10-29: Initial working version with added audio examples
 
