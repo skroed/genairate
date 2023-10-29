@@ -3,6 +3,13 @@ A repository to create the content for a generative AI based radio station.
 <!-- ![genairate](https://github.com/skroed/genairate/assets/83976953/9e3e07bd-2e2b-4337-bb0f-4955a20302a3 | width=100) -->
 <img src="https://github.com/skroed/genairate/assets/83976953/9e3e07bd-2e2b-4337-bb0f-4955a20302a3" width="600">
 
+## how it works
+I used LLMs to create song descriptions for various music kinds. Afterwards the moderations between the different songs are also created with LLMs and include a random invented topic like `tech`, `gossip` or `weather`.
+Finally the the songs are rendered by generative music models and the moderations are transferred into audio with text to speech models. The results shown here were obtained with the following models: \
+`song descriptions`: OpenAI GPT4 \
+`moderations`: OpenAI GPT4 \
+`song generation`: [facebook musicgen medium](https://huggingface.co/facebook/musicgen-medium) \
+`text to speech`: [suno bark](https://github.com/suno-ai/bark)
 ## tune in
 
 
