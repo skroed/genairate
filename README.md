@@ -54,7 +54,7 @@ Example of a moderation between two songs: \
   beautiful track. Relax your mind to the soothing melodies of "Dance of the Misty
   Moon" by Arabella Steinway. Enjoy!
 ### example audio
-#### example song 1
+#### [example song 1](https://github.com/skroed/genairate/blob/main/examples/sunset_melody.mp3?raw=true)
 `artist`: DJ Starfire \
 `description`: An uplifting EDM track with a pulsing rhythm and memorable melody. \
 `song_title`: Sunset Melody
@@ -62,7 +62,7 @@ Example of a moderation between two songs: \
 <audio src="https://github.com/skroed/genairate/blob/main/examples/sunset_melody.mp3?raw=true" controls="controls">
 </audio>
 
-#### example song 2
+#### [example song 2](https://github.com/skroed/genairate/blob/main/examples/spiritual_reverie.mp3?raw=true)
 `artist`: Cordelia Royal \
 `description`: An enchanting piece of classical music, played on a grand piano, unveiling
   a tranquil mood, gentle progression, and invoking contemplative tranquility. \
@@ -71,7 +71,7 @@ Example of a moderation between two songs: \
 <audio src="https://github.com/skroed/genairate/blob/main/examples/spiritual_reverie.mp3?raw=true" controls="controls">
 </audio>
 
-#### example moderation
+#### [example moderation](https://github.com/skroed/genairate/blob/main/examples/sunshine_morning_to_bass_enigma.mp3?raw=true)
 Song: Sunshine morning to Song: Bass enigma
 
 <audio src="https://github.com/skroed/genairate/blob/main/examples/sunshine_morning_to_bass_enigma.mp3?raw=true" controls="controls">
