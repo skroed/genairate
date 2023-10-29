@@ -9,7 +9,7 @@ A repository to create the content for a generative AI based radio station.
 ## TODO
 - [ ] support better speech synthesis
 - [ ] make moderation and song roles configurable
-- [ ] unify audio conversion in model
+- [x] unify audio conversion in model
 
 ## how to install
 You can install the repository via checkout and then
