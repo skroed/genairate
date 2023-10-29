@@ -22,6 +22,10 @@ https://github.com/skroed/genairate/assets/83976953/6336bc7f-e57c-4467-a305-b6cd
 ## TODO
 - [ ] support better speech synthesis
 - [ ] make moderation and song roles configurable
+- [ ] make moderation topics configurable
+- [ ] use links to news websites as links for moderation
+- [ ] intro and exit
+- [ ] create interview style moderations
 - [x] unify audio conversion in model
 
 ## how to install
