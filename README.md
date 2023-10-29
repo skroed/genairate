@@ -54,6 +54,24 @@ Example of a moderation between two songs: \
   beautiful track. Relax your mind to the soothing melodies of "Dance of the Misty
   Moon" by Arabella Steinway. Enjoy!
 ### example audio
-Feel free to browse through the [examples](examples) provided with the repository.
-The folder contains both songs and moderations between the songs. The full audio can be found
+here is one example song: \
+`artist`: DJ Starfire \
+`description`: An uplifting EDM track with a pulsing rhythm and memorable melody. \
+`song_title`: Sunset Melody \
+[song1](https://github.com/skroed/genairate/assets/83976953/e2b62842-6ff1-429c-8128-23bc10bac112)
+
+and here is another one: \
+`artist`: Cordelia Royal \
+`description`: An enchanting piece of classical music, played on a grand piano, unveiling
+  a tranquil mood, gentle progression, and invoking contemplative tranquility. \
+`song_title`: Spiritual Reverie \
+[song2](https://github.com/skroed/genairate/assets/83976953/b037d310-fd33-4e42-930c-c01a26767a7f)
+
+this is an example moderation: \
+Song: Sunshine morning to Song: Bass enigma \
+[moderation](https://github.com/skroed/genairate/assets/83976953/2437bba0-5cb5-4524-bd80-8a2c239bb634)
+
+
+Feel free to browse through all the [examples](examples) provided with the repository.
+The folder contains both songs and moderations between the songs. The full audio of ~15 minutes of genairate radio is located
 in [examples/merged_audio.mp3](examples/merged_audio.mp3).
