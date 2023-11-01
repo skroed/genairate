@@ -20,7 +20,8 @@ https://github.com/skroed/genairate/assets/83976953/6336bc7f-e57c-4467-a305-b6cd
 - 2023-10-29: Initial working version with added audio examples
 
 ## TODO
-- [ ] support better speech synthesis
+- [ ] support better speech synthesis model
+- [ ] use LDM2 for music generation
 - [ ] make moderation and song roles configurable
 - [ ] make moderation topics configurable
 - [ ] use links to news websites as links for moderation
