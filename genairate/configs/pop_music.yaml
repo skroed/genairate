@@ -1,6 +1,6 @@
 name: OpenAi
 model: gpt-4
-temperature: 1.3
-n_examples: 5
+temperature: 1.4
+n_examples: 4
 prompt_type: songs
-prompt: pop music, catchy melody, upbeat tempo, major key
+prompt: melodic pop music with acoustic guitar parts and a catchy refrain

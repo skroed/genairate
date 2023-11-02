@@ -3,4 +3,4 @@ model: gpt-4
 temperature: 1.4
 n_examples: 4
 prompt_type: songs
-prompt: classical music, only piano, quiet, slow, relaxing
+prompt: A contemporary hip-hop beat with smooth rhymes and catchy hooks.

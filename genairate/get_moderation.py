@@ -12,23 +12,23 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-@click.command(name='get-moderation')
+@click.command(name="get-moderation")
 @click.option(
-    '--config-file-path',
+    "--config-file-path",
     required=True,
     type=click.Path(exists=True),
-    help='Path to config file.',
+    help="Path to config file.",
 )
 @click.option(
-    '--song-file-path',
+    "--song-file-path",
     required=True,
     type=click.Path(exists=True),
-    help='Path to song file yaml that contains the descriptions',
+    help="Path to song file yaml that contains the descriptions",
 )
 @click.option(
-    '--moderation-file-path',
+    "--moderation-file-path",
     type=click.Path(writable=True),
-    help='Path to output directory.',
+    help="Path to output directory.",
     required=True,
 )
 def get_moderation(
@@ -36,8 +36,7 @@ def get_moderation(
     song_file_path: str = None,
     moderation_file_path: str = None,
 ):
-    """
-    Function to get moderation from the language model.
+    """Function to get moderation from the language model.
 
     Args:
         config_file_path (str, optional): The moderation configuration file.
@@ -46,20 +45,20 @@ def get_moderation(
     """
     # Check configuration file
     config = load_config(config_file_path)
-    logger.info('Loaded config file.')
+    logger.info("Loaded config file.")
 
     moderation_file_path = Path(moderation_file_path)
     moderation_file_path.mkdir(parents=True, exist_ok=True)
 
     # Load all the song titles and descriptions from the song file
-    song_files = list(Path(song_file_path).rglob('*.yaml'))
+    song_files = list(Path(song_file_path).rglob("*.yaml"))
     random.shuffle(song_files)
 
-    logger.info(f'Found {len(song_files)} song files.')
+    logger.info(f"Found {len(song_files)} song files.")
     logger.info(f"Getting {config['n_examples']} moderations.")
 
     previous = load_config(song_files.pop())
-    for idx_ex in range(config['n_examples']):
+    for idx_ex in range(config["n_examples"]):
         next = load_config(song_files.pop())
         language_model = get_language_model(config)
         try:
@@ -72,18 +71,18 @@ def get_moderation(
 
             with open(
                 Path(moderation_file_path)
-                / f"idx_{idx_ex}_{previous['song_title'].lower().replace(' ', '_')}_to_{next['song_title'].lower().replace(' ', '_')}.yaml",
-                'w',
+                / f"idx_{idx_ex:02d}_{previous['song_title'].lower().replace(' ', '_')}_to_{next['song_title'].lower().replace(' ', '_')}.yaml",
+                "w",
             ) as f:
                 yaml.dump(
                     {
-                        'moderation': moderation,
-                        'title_previous': previous['song_title'],
-                        'artist_previous': previous['artist'],
-                        'description_previous': previous['description'],
-                        'title_next': next['song_title'],
-                        'artist_next': next['artist'],
-                        'description_next': next['description'],
+                        "moderation": moderation,
+                        "title_previous": previous["song_title"],
+                        "artist_previous": previous["artist"],
+                        "description_previous": previous["description"],
+                        "title_next": next["song_title"],
+                        "artist_next": next["artist"],
+                        "description_next": next["description"],
                     },
                     f,
                 )

@@ -23,9 +23,7 @@ GLOBAL_SAMPLE_RATE = 22050
 
 
 class AudioModel(object):
-    """
-    Abstract class for audio models.
-    """
+    """Abstract class for audio models."""
 
     def __init__(
         self,
@@ -52,10 +50,10 @@ class AudioModel(object):
         self.inference_params = inference_params
 
     def raw_to_segment(
-        self, data: Union[np.array, bytes, torch.tensor],
+        self,
+        data: Union[np.array, bytes, torch.tensor],
     ) -> AudioSegment:
-        """
-        Converts raw audio to an AudioSegment.
+        """Converts raw audio to an AudioSegment.
 
         Args:
             data (Union[np.array, bytes, torch.tensor]): The raw audio.
@@ -66,17 +64,17 @@ class AudioModel(object):
         if torch.is_tensor(data):
             data = data.cpu().numpy().squeeze().astype(np.float32)
         elif isinstance(data, bytes):
-            if data[:4].decode('utf8') == 'fLaC':
+            if data[:4].decode("utf8") == "fLaC":
                 with TemporaryDirectory() as temp_dir:
-                    file_path = Path(temp_dir) / Path('tmp_audio.flac')
+                    file_path = Path(temp_dir) / Path("tmp_audio.flac")
                     file_path.write_bytes(data)
-                    data = AudioSegment.from_file(file_path, 'flac')
+                    data = AudioSegment.from_file(file_path, "flac")
                     data = data.set_frame_rate(GLOBAL_SAMPLE_RATE)
                 return data
             else:
                 data = (
                     np.array(
-                        eval(data)[0]['generated_audio'][0],
+                        eval(data)[0]["generated_audio"][0],
                     )
                     .squeeze()
                     .astype(np.float32)
@@ -85,7 +83,7 @@ class AudioModel(object):
             pass
         else:
             raise ValueError(
-                f'Data type {type(data)} not supported for raw_to_segment.',
+                f"Data type {type(data)} not supported for raw_to_segment.",
             )
 
         if self.sample_rate != GLOBAL_SAMPLE_RATE:
@@ -94,16 +92,14 @@ class AudioModel(object):
                 orig_sr=self.sample_rate,
                 target_sr=GLOBAL_SAMPLE_RATE,
             )
-        return AudioSegment(
-            data.tobytes(),
-            frame_rate=GLOBAL_SAMPLE_RATE,
-            sample_width=data.dtype.itemsize,
-            channels=1,
-        )
+        with TemporaryDirectory() as temp_dir:
+            file_path = Path(temp_dir) / Path("tmp_audio.wav")
+            scipy.io.wavfile.write(file_path, GLOBAL_SAMPLE_RATE, data)
+            segment = AudioSegment.from_file(file_path, "wav")
+        return segment
 
     def get(self, prompt: str) -> AudioSegment:
-        """
-        Abstract method for getting audio from a prompt.
+        """Abstract method for getting audio from a prompt.
 
         Args:
             prompt (str): The prompt to generate audio from.
@@ -112,7 +108,7 @@ class AudioModel(object):
         Returns:
             AudioSegment: The audio generated from the prompt.
         """
-        raise NotImplementedError('AudioModel is an abstract class.')
+        raise NotImplementedError("AudioModel is an abstract class.")
 
 
 class BarkAudioModel(AudioModel):
@@ -121,11 +117,11 @@ class BarkAudioModel(AudioModel):
         model_name_or_path: str,
         device: str,
         local: bool = True,
-        audio_type: str = 'tts',
+        audio_type: str = "tts",
         inference_params: dict = None,
+        speaker: str = None,
     ):
-        """
-        Initializes the BarkAudioModel class.
+        """Initializes the BarkAudioModel class.
 
         Args:
             model_name_or_path (str): The name or path of the model.
@@ -136,24 +132,27 @@ class BarkAudioModel(AudioModel):
                  Defaults to "tts".
             inference_params (dict, optional): Additional inference params.
                 Defaults to None.
-
+            speaker (str, optional): The speaker to use. Defaults to None.
         """
         super().__init__(
-            name='Bark',
+            name="Bark",
             local=local,
             inference_params=inference_params,
         )
 
         self.sample_rate = 24000
 
-        if audio_type.lower() != 'tts':
+        if audio_type.lower() != "tts":
             raise NotImplementedError(
-                'BarkAudioModel only supports TTS at the moment.',
+                "BarkAudioModel only supports TTS at the moment.",
             )
-        # Select a random speaker
-        speakers = [f'v2/en_speaker_{speaker}' for speaker in range(10)]
-        random.shuffle(speakers)
-        self.speaker = speakers.pop()
+        if not speaker:
+            # Select a random speaker
+            speakers = [f"v2/en_speaker_{speaker}" for speaker in range(10)]
+            random.shuffle(speakers)
+            self.speaker = speakers.pop()
+        else:
+            self.speaker = speaker
 
         if local:
             self.model = AutoModel.from_pretrained(
@@ -163,17 +162,16 @@ class BarkAudioModel(AudioModel):
 
         else:
             self.model = InferenceClient(model=model_name_or_path)
-            if '.huggingface.cloud' in model_name_or_path:
+            if ".huggingface.cloud" in model_name_or_path:
                 self.custom_endpoint = True
                 logger.info(
-                    f'Using custom endpoint {model_name_or_path} for bark',
+                    f"Using custom endpoint {model_name_or_path} for bark",
                 )
             else:
                 self.custom_endpoint = False
 
     def get(self, prompt: str) -> AudioSegment:
-        """
-        Gets audio from a prompt.
+        """Gets audio from a prompt.
 
         Args:
             prompt (str): The prompt to generate audio from.
@@ -186,12 +184,12 @@ class BarkAudioModel(AudioModel):
 
         audio_arrays = []
         for sentence in sentences:
-            logger.info(f'Generating audio for sentence: {sentence}')
+            logger.info(f"Generating audio for sentence: {sentence}")
             if self.local:
                 audio_raw = self.model.generate(
                     **self.processor(
                         text=[sentence],
-                        return_tensors='pt',
+                        return_tensors="pt",
                         voice_preset=self.speaker,
                     ),
                     do_sample=False,
@@ -203,18 +201,18 @@ class BarkAudioModel(AudioModel):
                 if self.custom_endpoint:
                     audio_raw = self.model.post(
                         json={
-                            'inputs': sentence,
-                            'voice_preset': self.speaker,
+                            "inputs": sentence,
+                            "voice_preset": self.speaker,
                         },
                     )
                     audio = self.raw_to_segment(audio_raw)
                 else:
                     logger.warning(
-                        'speaker is not being used in remote setting. Use custom endpoint for this.',
+                        "speaker is not being used in remote setting. Use custom endpoint for this.",
                     )
                     audio_raw = self.model.post(
                         json={
-                            'inputs': sentence,
+                            "inputs": sentence,
                         },
                     )
                     audio = self.raw_to_segment(audio_raw)
@@ -230,12 +228,11 @@ class AudiocraftAudioModel(AudioModel):
         model_name_or_path: str,
         device: str,
         local: bool = True,
-        audio_type: str = 'music',
+        audio_type: str = "music",
         duration: int = 25,
         inference_params: dict = None,
     ):
-        """
-        Initializes the AudiocraftAudioModel class.
+        """Initializes the AudiocraftAudioModel class.
 
         Args:
             model_name_or_path (str): The name or path of the model.
@@ -247,19 +244,18 @@ class AudiocraftAudioModel(AudioModel):
                 Defaults to 25 seconds.
             inference_params (dict, optional): additional inference params.
                 Defaults to None.
-
         """
         super().__init__(
-            name='Audiocraft',
+            name="Audiocraft",
             local=local,
             inference_params=inference_params,
         )
 
         self.sample_rate = 32000
 
-        if audio_type.lower() != 'music':
+        if audio_type.lower() != "music":
             raise NotImplementedError(
-                'AudiocraftAudioModel only supports music at the moment.',
+                "AudiocraftAudioModel only supports music at the moment.",
             )
 
         if local:
@@ -268,17 +264,16 @@ class AudiocraftAudioModel(AudioModel):
         else:
             # Duration is 30s by default
             self.model = InferenceClient(model=model_name_or_path)
-            if '.huggingface.cloud' in model_name_or_path:
+            if ".huggingface.cloud" in model_name_or_path:
                 logger.info(
-                    f'Using custom endpoint {model_name_or_path} for musicgen',
+                    f"Using custom endpoint {model_name_or_path} for musicgen",
                 )
                 self.custom_endpoint = True
             else:
                 self.custom_endpoint = False
 
     def get(self, prompt: str) -> AudioSegment:
-        """
-        Gets audio from a prompt.
+        """Gets audio from a prompt.
 
         Args:
             prompt (str): The prompt to generate audio from.
@@ -294,7 +289,7 @@ class AudiocraftAudioModel(AudioModel):
             if self.custom_endpoint:
                 audio_raw = self.model.post(
                     json={
-                        'inputs': prompt,
+                        "inputs": prompt,
                     },
                 )
                 audio = self.raw_to_segment(audio_raw)
@@ -314,11 +309,10 @@ class VitsAudioModel(AudioModel):
         model_name_or_path: str,
         device: str,
         local: bool = True,
-        audio_type: str = 'tts',
+        audio_type: str = "tts",
         inference_params: dict = None,
     ):
-        """
-        Initializes the VitsAudioModel class.
+        """Initializes the VitsAudioModel class.
 
         Args:
             model_name_or_path (str): The name or path of the model.
@@ -328,17 +322,16 @@ class VitsAudioModel(AudioModel):
             audio_type (str, optional): Which audio type. Defaults to "tts".
             inference_params (dict, optional): additional inference params.
                 Defaults to None.
-
         """
         super().__init__(
-            name='Vits',
+            name="Vits",
             local=local,
             inference_params=inference_params,
         )
 
-        if audio_type.lower() != 'tts':
+        if audio_type.lower() != "tts":
             raise NotImplementedError(
-                'VitsAudioModel only supports TTS at the moment.',
+                "VitsAudioModel only supports TTS at the moment.",
             )
 
         if local:
@@ -350,8 +343,7 @@ class VitsAudioModel(AudioModel):
             self.model = InferenceClient(model=model_name_or_path)
 
     def get(self, prompt: str) -> AudioSegment:
-        """
-        Gets audio from a prompt.
+        """Gets audio from a prompt.
 
         Args:
             prompt (str): The prompt to generate audio from.
@@ -363,9 +355,9 @@ class VitsAudioModel(AudioModel):
 
         audio_arrays = []
         for sentence in sentences:
-            logger.info(f'Generating audio for sentence: {sentence}')
+            logger.info(f"Generating audio for sentence: {sentence}")
             if self.local:
-                inputs = self.tokenizer(sentence, return_tensors='pt')
+                inputs = self.tokenizer(sentence, return_tensors="pt")
                 with torch.no_grad():
                     audio_raw = self.model(
                         **inputs,
@@ -375,7 +367,7 @@ class VitsAudioModel(AudioModel):
             else:
                 audio_raw = self.model.post(
                     json={
-                        'inputs': sentence,
+                        "inputs": sentence,
                     },
                 )
                 audio = self.raw_to_segment(audio_raw)
@@ -385,9 +377,8 @@ class VitsAudioModel(AudioModel):
 
 
 def get_audio_model(config: dict) -> AudioModel:
-    """
-    Helper function to get an audio model from the config.
-    Currently supports Bark, Audiocraft, and Vits.
+    """Helper function to get an audio model from the config. Currently
+    supports Bark, Audiocraft, and Vits.
 
     Args:
         config (dict): The config for the audio model.
@@ -395,27 +386,28 @@ def get_audio_model(config: dict) -> AudioModel:
     Returns:
         AudioModel: The initialized audio model.
     """
-    if config['name'].lower() == 'bark':
+    if config["name"].lower() == "bark":
         return BarkAudioModel(
-            model_name_or_path=config['model_name_or_path'],
-            device=config.get('device', 'cpu'),
-            local=config['local'],
-            audio_type=config['audio_type'],
+            model_name_or_path=config["model_name_or_path"],
+            device=config.get("device", "cpu"),
+            local=config["local"],
+            audio_type=config["audio_type"],
+            speaker=config.get("speaker", None),
         )
-    elif config['name'].lower() == 'audiocraft':
+    elif config["name"].lower() == "audiocraft":
         return AudiocraftAudioModel(
-            model_name_or_path=config['model_name_or_path'],
-            device=config.get('device', 'cpu'),
-            local=config['local'],
-            audio_type=config['audio_type'],
-            duration=config.get('duration', None),
+            model_name_or_path=config["model_name_or_path"],
+            device=config.get("device", "cpu"),
+            local=config["local"],
+            audio_type=config["audio_type"],
+            duration=config.get("duration", None),
         )
-    elif config['name'].lower() == 'vits':
+    elif config["name"].lower() == "vits":
         return VitsAudioModel(
-            model_name_or_path=config['model_name_or_path'],
-            device=config.get('device', 'cpu'),
-            local=config['local'],
-            audio_type=config['audio_type'],
+            model_name_or_path=config["model_name_or_path"],
+            device=config.get("device", "cpu"),
+            local=config["local"],
+            audio_type=config["audio_type"],
         )
     else:
         raise ValueError(f"Model {config['name']} not supported.")
