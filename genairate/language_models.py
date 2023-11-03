@@ -50,8 +50,6 @@ class LanguageModel(object):
             Dont tell that these news are fake.
             Then you should find a good transition to the next song.
             The overall text should not be longer than 30 words.
-            You can use the following meta tags to improve the expressability of your moderation:
-            [laughter], [laughs], [sighs], [gasps], [clears throat].
             The name of the previous and next songs will be provided to you in the following format:
             previous: <song title>|||<artist name>|||<description>
             next: <song title>|||<artist name>|||<description>

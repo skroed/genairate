@@ -1,6 +1,6 @@
 name: OpenAi
 model: gpt-4
-temperature: 1.4
+temperature: 1.5
 n_examples: 4
 prompt_type: songs
 prompt: deep house music with a driving beat and interesting sounds 120 bpm
