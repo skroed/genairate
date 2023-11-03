@@ -12,7 +12,7 @@ Finally the the songs are rendered by generative music models and the moderation
 `text to speech`: [suno bark](https://github.com/suno-ai/bark)
 ## tune in
 
-![radio-genairate](examples/merged_audio_short.mov)
+https://github.com/skroed/genairate/assets/83976953/1b82b2eb-b5c9-4356-81b2-85c4a0c9764a
 
 ## change Log
 - 2023-10-29: Initial working version with added audio examples
