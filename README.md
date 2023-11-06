@@ -14,7 +14,8 @@ Finally the the songs are rendered by generative music models and the moderation
 
 https://github.com/skroed/genairate/assets/83976953/1b82b2eb-b5c9-4356-81b2-85c4a0c9764a
 
-<img width="600" alt="ImageForGenairate" src="https://github.com/skroed/genairate/assets/83976953/28bc323e-71a0-4ace-8e70-5cd3c8f4a3e1">
+<img width="600" alt="drawinggenairate" src="https://github.com/skroed/genairate/assets/83976953/526caabc-0f47-4cf3-b4d4-4762c51b7a07">
+
 
 ## change Log
 - 2023-10-29: Initial working version with added audio examples
