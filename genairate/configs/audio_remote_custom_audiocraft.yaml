@@ -14,5 +14,5 @@ song:
   inference_params:
     temperature: 1.0
     cfg_coef: 3.0
-  model_name_or_path: https://n66dp01hoev7s032.eu-west-1.aws.endpoints.huggingface.cloud
+  model_name_or_path: <my_remote>
   local: false

@@ -60,7 +60,7 @@ genairate get-moderation --config-file-path configs/moderation.yaml --song-file-
 ```
 3. Last but not least we need to convert everything into audio. This is the most involved step and requires the longest time by far.
 ```shell
-genairate get-audio --config-file-path configs/audio_remote.yaml --moderation-file-path my/moderation/path --audio-output-path audio/out/path
+genairate get-audio --config-file-path configs/audio_remote_custom_audiocraft.yaml --moderation-file-path my/moderation/path --audio-output-path audio/out/path
 ```
 ### configuration
 Unless you have a super powerful machine it is recommended to use remote configurations for LLMs and generative audio. For LLMs the best performance is reached with OpenAI.
