@@ -18,7 +18,10 @@ other supported models are `audioldm2`, `bark`, `vits` for audio and `Llama` as 
 
 ## tune in
 
-https://github.com/skroed/genairate/blob/main/examples/merged_audio.mp4
+
+https://github.com/skroed/genairate/assets/83976953/6bceb7f5-78ad-4b5b-afa9-34b9e2af6811
+
+
 
 
 ## change Log
