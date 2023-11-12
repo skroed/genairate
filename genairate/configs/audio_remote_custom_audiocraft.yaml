@@ -1,0 +1,18 @@
+n_examples: 6
+moderation:
+  name: openai
+  audio_type: tts
+  model_name_or_path: tts-1-hd
+  local: false
+  voice_preset: alloy
+song:
+  name: audiocraft
+  audio_type: music
+  duration: 50
+  chunk_size: 30
+  audio_window: 25
+  inference_params:
+    temperature: 1.0
+    cfg_coef: 3.0
+  model_name_or_path: https://n66dp01hoev7s032.eu-west-1.aws.endpoints.huggingface.cloud
+  local: false

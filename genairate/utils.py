@@ -2,6 +2,7 @@ import logging
 from pathlib import Path
 
 import yaml
+from pydub import AudioSegment
 
 logger = logging.getLogger(__name__)
 
@@ -21,10 +22,13 @@ def load_config(config_file_path: Path) -> dict:
     return config
 
 
-def merge_audio_files(full_audio: list[tuple], output_path: Path) -> None:
+def merge_audio_files(
+    intro: AudioSegment, full_audio: list[tuple[AudioSegment]], output_path: Path
+) -> None:
     """Merge all the audio files into one.
 
     Args:
+        intro (AudioSegment): The introduction audio.
         full_audio (list[tuple]): A list of tuples containing the audio files.
             every tuple has the format (previous_song, moderation).
         output_path (Path): where to save the final audio file.
@@ -32,7 +36,7 @@ def merge_audio_files(full_audio: list[tuple], output_path: Path) -> None:
     for idx, (prev_song, mod) in enumerate(full_audio):
         prev_song = prev_song.fade_in(1000).fade_out(4000)
         if idx == 0:
-            full_audio = prev_song.append(mod, crossfade=1000)
+            full_audio = intro + prev_song.append(mod, crossfade=1000)
 
         else:
             full_audio += prev_song.append(mod, crossfade=1000)

@@ -1,0 +1,14 @@
+n_examples: 6
+moderation:
+  name: openai
+  audio_type: tts
+  model_name_or_path: tts-1-hd
+  local: false
+  voice_preset: alloy
+song:
+  name: audioldm2
+  audio_type: music
+  inference_params:
+    duration: 35
+  model_name_or_path: <my_remote>
+  local: false

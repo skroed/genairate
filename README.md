@@ -1,4 +1,4 @@
-# genairate 🔉
+# 🔉 genairate 🔉
 A repository to create the content for a generative AI based radio station.
 <!-- ![genairate](https://github.com/skroed/genairate/assets/83976953/9e3e07bd-2e2b-4337-bb0f-4955a20302a3 | width=100) -->
 <img src="https://github.com/skroed/genairate/assets/83976953/9e3e07bd-2e2b-4337-bb0f-4955a20302a3" width="600">
@@ -8,25 +8,31 @@ I used LLMs to create song descriptions for various music kinds. Afterwards the 
 Finally the the songs are rendered by generative music models and the moderations are transferred into audio with text to speech models. The results shown here were obtained with the following models: \
 `song descriptions`: OpenAI GPT4 \
 `moderations`: OpenAI GPT4 \
-`song generation`: [facebook musicgen medium](https://huggingface.co/facebook/musicgen-medium) \
-`text to speech`: [suno bark](https://github.com/suno-ai/bark)
+`song generation`: [musicgen-large](https://huggingface.co/facebook/musicgen-large) \
+`text to speech`: [OpenAI tts-1-hd](https://platform.openai.com/docs/guides/text-to-speech)
+
+other supported models are `audioldm2`, `bark`, `vits` for audio and `Llama` as LLM backend model.
+### Requirements
+- OpenAI access via their [API](https://openai.com/blog/openai-api) and sufficient funds.
+- At least one Nvidia Tesla T6 (16GB of memory) or a deployment of my [huggingface-repo](https://huggingface.co/skroed/audiocraft_handler).
+
 ## tune in
 
-https://github.com/skroed/genairate/assets/83976953/1b82b2eb-b5c9-4356-81b2-85c4a0c9764a
-
-<img width="600" alt="drawinggenairate" src="https://github.com/skroed/genairate/assets/83976953/526caabc-0f47-4cf3-b4d4-4762c51b7a07">
+https://github.com/skroed/genairate/blob/main/examples/merged_audio.mp4
 
 
 ## change Log
 - 2023-10-29: Initial working version with added audio examples
 
 ## TODO
-- [ ] support better speech synthesis model
-- [ ] use LDM2 for music generation
+- [x] support better speech synthesis model
+- [x] allow use LDM2 for music generation
+- [ ] all stero sound musicgen
+- [x] support musicgen > 30s sounds by continuation
 - [ ] make moderation and song roles configurable
 - [ ] make moderation topics configurable
 - [ ] use links to news websites as links for moderation
-- [ ] intro and exit
+- [x] intro and exit
 - [ ] create interview style moderations
 - [x] unify audio conversion in model
 
@@ -38,7 +44,7 @@ poetry install --sync
 This command should install the package together with the genairate entry point.
 This configuration should work on MacOS.
 ## openAI and HF Tokens
-Make sure that you have a token for OpenAI registered under OPENAI_API_KEY. For using Llama models via huggingface a PRO membership is necessary.
+Make sure that you have a token for OpenAI registered under `OPENAI_API_KEY`. For using `Llama` models via huggingface a PRO membership is necessary.
 ## how to use
 In order to use `genairate` to produce your own generative AI radio station 3 steps are needed:
 1. Use the `get-songs` entrypoint to create a number of songs. This means creating a semantic descriptions for the songs and not the audio itself, which will be done in step 3. For some ideas check the configurations, for instance `configs/electronic_music`. A typical command would look like:
@@ -55,7 +61,7 @@ genairate get-audio --config-file-path configs/audio_remote.yaml --moderation-fi
 ```
 ### configuration
 Unless you have a super powerful machine it is recommended to use remote configurations for LLMs and generative audio. For LLMs the best performance is reached with OpenAI.
-The following repositories can be used for [Bark](https://huggingface.co/skroed/bark) and [musicgen-medium](https://huggingface.co/skroed/musicgen-medium) to create inference endpoints.
+The following repositories can be used for [Bark](https://huggingface.co/skroed/bark) and [musicgen-large](https://huggingface.co/skroed/audiocraft_handler) to create inference endpoints.
 ### examples songs description
 `song_title`: Dance with Joy \
 `artist`:  Bubblegum Beats \
@@ -73,28 +79,21 @@ Example of a moderation between two songs: \
   beautiful track. Relax your mind to the soothing melodies of "Dance of the Misty
   Moon" by Arabella Steinway. Enjoy!
 ### example audio
-#### [example song 1](https://github.com/skroed/genairate/blob/main/examples/sunset_melody.mp3?raw=true)
-`artist`: DJ Starfire \
-`description`: An uplifting EDM track with a pulsing rhythm and memorable melody. \
-`song_title`: Sunset Melody
+#### [example song 1](https://github.com/skroed/genairate/blob/main/examples/mystic_drift.mp3?raw=true)
+`artist`: Neon Geometrics \
+`description`: Deep House genre blended harmoniously with driving rhythms and unique
+  acoustic iterations clocking in at 120 BPM. \
+`song_title`: Mystic Drift
 
-<audio src="https://github.com/skroed/genairate/blob/main/examples/sunset_melody.mp3?raw=true" controls="controls">
-</audio>
+#### [example song 2](https://github.com/skroed/genairate/blob/main/examples/sun_arrayvisions_2.0.mp3?raw=true)
+`artist`: Marble dust \
+`description`: Upbeat electronic song pulsating merrinebarty with earelementingly compiled
+  catchy melodial tactics wrapped up in captivating summer sided conversations atop
+  an upbeat fragmentolo funded sonic constituent - 110 BPM electronic explosive happiness \
+`song_title`: Sun arrayvisions 2.0
 
-#### [example song 2](https://github.com/skroed/genairate/blob/main/examples/spiritual_reverie.mp3?raw=true)
-`artist`: Cordelia Royal \
-`description`: An enchanting piece of classical music, played on a grand piano, unveiling
-  a tranquil mood, gentle progression, and invoking contemplative tranquility. \
-`song_title`: Spiritual Reverie
-
-<audio src="https://github.com/skroed/genairate/blob/main/examples/spiritual_reverie.mp3?raw=true" controls="controls">
-</audio>
-
-#### [example moderation](https://github.com/skroed/genairate/blob/main/examples/sunshine_morning_to_bass_enigma.mp3?raw=true)
+#### [example moderation](https://github.com/skroed/genairate/blob/main/examples/burning_circuit_to_sun_arrayvisions_2.0.mp3?raw=true)
 Song: Sunshine morning to Song: Bass enigma
-
-<audio src="https://github.com/skroed/genairate/blob/main/examples/sunshine_morning_to_bass_enigma.mp3?raw=true" controls="controls">
-</audio>
 
 #### more examples
 Feel free to browse through all the [examples](examples) provided with the repository.

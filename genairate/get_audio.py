@@ -19,6 +19,12 @@ logger = logging.getLogger(__name__)
     help="Path to config file.",
 )
 @click.option(
+    "--introduction-file-path",
+    type=click.Path(writable=True),
+    required=True,
+    help="Path to introduction yaml.",
+)
+@click.option(
     "--moderation-file-path",
     type=click.Path(writable=True),
     required=True,
@@ -56,6 +62,7 @@ logger = logging.getLogger(__name__)
 )
 def get_audio(
     config_file_path: Path = None,
+    introduction_file_path: Path = None,
     moderation_file_path: Path = None,
     audio_output_path: Path = None,
     overwrite_songs: bool = None,
@@ -68,6 +75,7 @@ def get_audio(
 
     Args:
         config_file_path (Path, optional): The configuration file.
+        introduction_file_path (Path, optional): The introduction file yaml
         moderation_file_path (Path, optional): The moderation file yaml
             that contains all the information about the previous and
             next songs as well as the moderation.
@@ -92,6 +100,9 @@ def get_audio(
     )
     moderation_model = get_audio_model(config["moderation"])
     song_model = get_audio_model(config["song"])
+    logger.info("Done loading models.")
+    logger.info("Getting audio for introduction.")
+    intro = moderation_model.get(load_config(introduction_file_path)["intro"])
 
     config_list = sorted(list(Path(moderation_file_path).rglob("*.yaml")))
     full_audio = []
@@ -132,4 +143,4 @@ def get_audio(
 
     logger.info("Done processing all examples.")
     if merge_audio:
-        merge_audio_files(full_audio, audio_output_path)
+        merge_audio_files(intro, full_audio, audio_output_path)

@@ -25,7 +25,7 @@ einops = "^0.7.0"
 safetensors = "^0.3.3"
 nltk = "^3.8.1"
 scipy = "^1.11.3"
-openai = "^1.0.0b2"
+openai = "^1.1.2"
 xformers = "^0.0.22"
 audiocraft = "^1.0"
 

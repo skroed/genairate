@@ -1,4 +1,5 @@
 import logging
+import os
 import random
 from functools import reduce
 from pathlib import Path
@@ -12,6 +13,7 @@ import torch
 from audiocraft.models import MusicGen
 from huggingface_hub import InferenceClient
 from nltk import sent_tokenize
+from openai import OpenAI, _base_client
 from pydub import AudioSegment
 from transformers import AutoModel, AutoProcessor, AutoTokenizer, VitsModel
 
@@ -61,6 +63,7 @@ class AudioModel(object):
         Returns:
             AudioSegment: The audio as an AudioSegment.
         """
+        # TODO: Cleanup this code section
         if torch.is_tensor(data):
             data = data.cpu().numpy().squeeze().astype(np.float32)
         elif isinstance(data, bytes):
@@ -74,13 +77,20 @@ class AudioModel(object):
             else:
                 data = (
                     np.array(
-                        eval(data)[0]["generated_audio"][0],
+                        eval(data)["generated_audio"],
                     )
                     .squeeze()
                     .astype(np.float32)
                 )
         elif isinstance(data, np.ndarray):
             pass
+        elif isinstance(data, _base_client.HttpxBinaryResponseContent):
+            with TemporaryDirectory() as temp_dir:
+                file_path = Path(temp_dir) / Path("tmp_audio.mp3")
+                data.stream_to_file(file_path)
+                data = AudioSegment.from_file(file_path, "mp3")
+                data = data.set_frame_rate(GLOBAL_SAMPLE_RATE)
+                return data
         else:
             raise ValueError(
                 f"Data type {type(data)} not supported for raw_to_segment.",
@@ -231,6 +241,8 @@ class AudiocraftAudioModel(AudioModel):
         audio_type: str = "music",
         duration: int = 25,
         inference_params: dict = None,
+        chunk_size: int = 30,
+        audio_window: int = 20,
     ):
         """Initializes the AudiocraftAudioModel class.
 
@@ -244,14 +256,22 @@ class AudiocraftAudioModel(AudioModel):
                 Defaults to 25 seconds.
             inference_params (dict, optional): additional inference params.
                 Defaults to None.
+            chunk_size (int, optional): The size of each chunk in seconds.
+                Defaults to 30.
+            audio_window (int, optional): The size of the audio window in seconds.
+                Defaults to 20.
         """
         super().__init__(
             name="Audiocraft",
             local=local,
             inference_params=inference_params,
         )
+        # Pass duration to inference params
+        self.inference_params["duration"] = duration
 
         self.sample_rate = 32000
+        self.chunk_size = chunk_size
+        self.audio_window = audio_window
 
         if audio_type.lower() != "music":
             raise NotImplementedError(
@@ -290,6 +310,9 @@ class AudiocraftAudioModel(AudioModel):
                 audio_raw = self.model.post(
                     json={
                         "inputs": prompt,
+                        "generation_params": self.inference_params,
+                        "chunk_size": self.chunk_size,
+                        "audio_window": self.audio_window,
                     },
                 )
                 audio = self.raw_to_segment(audio_raw)
@@ -301,6 +324,58 @@ class AudiocraftAudioModel(AudioModel):
                 )
                 audio = self.raw_to_segment(audio_raw)
             return audio
+
+
+class AudioLDM2(AudioModel):
+    def __init__(self, model_name_or_path: str, inference_params: dict = None):
+        """Initializes the AudioLDM2 class.
+
+        Args:
+            model_name_or_path (str): The name or path of the model.
+            inference_params (dict, optional): Parameters to pass for inference. Defaults to None.
+        """
+        super().__init__(
+            name="AudioLDM2", local=False, inference_params=inference_params
+        )
+        self.sample_rate = 16000
+        self.model = InferenceClient(model=model_name_or_path)
+        if ".huggingface.cloud" in model_name_or_path:
+            logger.info(
+                f"Using custom endpoint {model_name_or_path} for audildm2",
+            )
+            self.custom_endpoint = True
+        else:
+            self.custom_endpoint = False
+
+    def get(self, prompt: str) -> AudioSegment:
+        """Gets audio from a prompt.
+
+        Args:
+            prompt (str): The prompt to generate audio from.
+
+        Returns:
+            AudioSegment: The audio generated from the prompt.
+        """
+
+        if self.custom_endpoint:
+            audio_raw = self.model.post(
+                json={
+                    "inputs": prompt,
+                    "duration": self.inference_params.get("duration", 30),
+                    "negative_prompt": self.inference_params.get(
+                        "negative_prompt", "Low quality, average quality."
+                    ),
+                },
+            )
+            audio = self.raw_to_segment(audio_raw)
+
+        else:
+            audio_raw = self.model.text_to_speech(
+                prompt,
+                **self.inference_params,
+            )
+            audio = self.raw_to_segment(audio_raw)
+        return audio
 
 
 class VitsAudioModel(AudioModel):
@@ -376,6 +451,46 @@ class VitsAudioModel(AudioModel):
         return reduce(lambda x, y: x + y, audio_arrays)
 
 
+class OpenAiAudioModel(AudioModel):
+    def __init__(self, model_name_or_path: str, voice_preset: str = None):
+        """Initializes the OpenAiAudioModel class.
+
+        Args:
+            model_name_or_path (str): The name or path of the model.
+            voice_preset (str, optional): The voice preset. Defaults to None.
+        """
+        super().__init__(
+            name="OpenAi",
+            local=False,
+        )
+        self.inference_client = OpenAI(
+            api_key=os.environ["OPENAI_API_KEY"],
+        )
+        self.model_name_or_path = model_name_or_path
+        if not voice_preset:
+            voices = ["alloy", "echo", "fable", "onyx", "nova", "shimmer"]
+            self.voice_preset = random.choice(voices)
+        else:
+            self.voice_preset = voice_preset
+
+    def get(self, prompt: str) -> AudioSegment:
+        """Gets audio from a prompt.
+
+        Args:
+            prompt (str): The prompt to generate audio from.
+
+        Returns:
+            AudioSegment: The audio generated from the prompt.
+        """
+        response = self.inference_client.audio.speech.create(
+            model=self.model_name_or_path,
+            voice=self.voice_preset,
+            input=prompt,
+        )
+        segment = self.raw_to_segment(response)
+        return segment
+
+
 def get_audio_model(config: dict) -> AudioModel:
     """Helper function to get an audio model from the config. Currently
     supports Bark, Audiocraft, and Vits.
@@ -401,6 +516,9 @@ def get_audio_model(config: dict) -> AudioModel:
             local=config["local"],
             audio_type=config["audio_type"],
             duration=config.get("duration", None),
+            inference_params=config.get("generation_params", {}),
+            chunk_size=config.get("chunk_size", 30),
+            audio_window=config.get("audio_window", 20),
         )
     elif config["name"].lower() == "vits":
         return VitsAudioModel(
@@ -408,6 +526,16 @@ def get_audio_model(config: dict) -> AudioModel:
             device=config.get("device", "cpu"),
             local=config["local"],
             audio_type=config["audio_type"],
+        )
+    elif config["name"].lower() == "openai":
+        return OpenAiAudioModel(
+            model_name_or_path=config["model_name_or_path"],
+            voice_preset=config.get("voice_preset", None),
+        )
+    elif config["name"].lower() == "audioldm2":
+        return AudioLDM2(
+            model_name_or_path=config["model_name_or_path"],
+            inference_params=config.get("inference_params", None),
         )
     else:
         raise ValueError(f"Model {config['name']} not supported.")
