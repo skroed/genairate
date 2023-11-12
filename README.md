@@ -30,7 +30,7 @@ https://github.com/skroed/genairate/assets/83976953/6bceb7f5-78ad-4b5b-afa9-34b9
 ## TODO
 - [x] support better speech synthesis model
 - [x] allow use LDM2 for music generation
-- [ ] all stero sound musicgen
+- [ ] allow stereo sound musicgen generation
 - [x] support musicgen > 30s sounds by continuation
 - [ ] make moderation and song roles configurable
 - [ ] make moderation topics configurable
@@ -96,7 +96,7 @@ Example of a moderation between two songs: \
 `song_title`: Sun arrayvisions 2.0
 
 #### [example moderation](https://github.com/skroed/genairate/blob/main/examples/burning_circuit_to_sun_arrayvisions_2.0.mp3?raw=true)
-Song: Sunshine morning to Song: Bass enigma
+Song: burning circuit to sun arrayvisions 2.0
 
 #### more examples
 Feel free to browse through all the [examples](examples) provided with the repository.
